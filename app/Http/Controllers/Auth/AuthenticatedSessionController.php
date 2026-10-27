@@ -28,6 +28,19 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Ambil data user yang sedang login
+       $user = Auth::user();
+
+        // Alihkan halaman berdasarkan role user
+        if ($user->role === 'super_admin') {
+            return redirect()->intended(route('super-admin.tenants.index'));
+        } 
+        
+        if ($user->role === 'student' || $user->role === 'siswa') {
+            return redirect()->intended(route('siswa.dashboard'));
+        }
+
+        // Fallback default jika role lain
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
