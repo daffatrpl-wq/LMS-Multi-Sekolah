@@ -42,3 +42,6 @@ Route::middleware(['auth'])->prefix('siswa')->name('siswa.')->group(function () 
     Route::get('/tugas', DaftarTugas::class)->name('tugas');
     Route::get('/tugas/{assignment}', KumpulkanTugas::class)->name('tugas.kumpul');
 });
+
+// Memuat rute modular untuk Admin Sekolah
+require base_path('app/Modules/admin_sekolah/routes/web.php');

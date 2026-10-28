@@ -40,6 +40,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('siswa.dashboard'));
         }
 
+        if ($user->role === 'admin' || $user->role === 'admin_sekolah') {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
         // Fallback default jika role lain
         return redirect()->intended(route('dashboard', absolute: false));
     }
