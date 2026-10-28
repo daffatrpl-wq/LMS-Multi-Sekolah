@@ -13,7 +13,7 @@ use App\Livewire\Siswa\KumpulkanTugas;
 
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 // Halaman utama dashboard bawaan Breeze (bisa diarahkan atau diganti jika perlu)
