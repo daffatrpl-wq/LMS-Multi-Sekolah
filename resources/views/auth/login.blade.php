@@ -82,13 +82,13 @@ form{width:100%;max-width:320px;margin:0 auto}
 </head>
 <body>
 <main class="stage">
-  <div class="logo" aria-label="SIKESMA">
+  <div class="logo" aria-label="LMS Logo">
     <svg viewBox="0 0 64 52" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
       <path d="M32 4 6 15l26 11 26-11L32 4Z" fill="#fff"/>
       <path d="M16 22v8c0 4 7 7 16 7s16-3 16-7v-8"/>
       <path d="M32 46c-7-5-11-8-11-12a6 6 0 0 1 11-3 6 6 0 0 1 11 3c0 4-4 7-11 12Z" fill="#7aa5de"/>
     </svg>
-    <b>SIKESMA</b><small>Sistem Kesejahteraan Mahasiswa</small>
+    <b>LMS</b><small>Learning Management System</small>
   </div>
 
   <section class="card">

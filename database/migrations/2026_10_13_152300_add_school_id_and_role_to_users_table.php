@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
      Schema::table('users', function (Blueprint $table) {
-        $table->foreignId('school_id')->nullable()->constrained('schools')->nullOnDelete();
+        $table->foreignId('school_id')->nullable()->constrained('schools')->restrictOnDelete();
         $table->enum('role', ['super_admin', 'school_admin', 'teacher', 'student'])->default('student');
         $table->boolean('is_active')->default(true);
     });
@@ -23,8 +23,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+    Schema::table('users', function (Blueprint $table) {
+        $table->dropConstrainedForeignId('school_id');
+        $table->dropColumn(['role', 'is_active']);
+});
     }
 };

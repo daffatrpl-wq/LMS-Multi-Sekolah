@@ -11,31 +11,23 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
     public function create(): View
     {
         return view('auth.login');
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        // Ambil data user yang sedang login
-       $user = Auth::user();
+        $user = Auth::user();
 
-        // Alihkan halaman berdasarkan role user
         if ($user->role === 'super_admin') {
             return redirect()->intended(route('super-admin.dashboard'));
-        } 
-        
+        }
+
         if ($user->role === 'student' || $user->role === 'siswa') {
             return redirect()->intended(route('siswa.dashboard'));
         }
@@ -44,13 +36,9 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        // Fallback default jika role lain
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();

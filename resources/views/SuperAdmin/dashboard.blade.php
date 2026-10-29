@@ -1,175 +1,204 @@
+@php
+    $namaUser = auth()->user()->name ?? 'Super Admin';
+
+    $stats = [
+        ['label' => 'Total Sekolah',  'value' => '25',    'foot' => '22 Aktif | 2 Ditangguhkan | 1 Nonaktif', 'icon' => 'i-school', 'tone' => 'blue'],
+        ['label' => 'Sekolah Aktif',  'value' => '22',    'foot' => '88% dari total',                         'icon' => 'i-check',  'tone' => 'green'],
+        ['label' => 'Total Pengguna', 'value' => '8.540', 'foot' => 'Guru 700 | Siswa 7,820',                 'icon' => 'i-users',  'tone' => 'orange'],
+        ['label' => 'Total Kelas',    'value' => '980',   'foot' => 'dari 25 sekolah',                        'icon' => 'i-class',  'tone' => 'purple'],
+    ];
+
+    $sekolah = [
+        ['nama' => 'SMAN 1 Banyuwangi',  'status' => 'Aktif',        'pengguna' => 450, 'tgl' => '15 Sep 2026'],
+        ['nama' => 'SMKN 1 Banyuwangi',  'status' => 'Aktif',        'pengguna' => 380, 'tgl' => '12 Sep 2026'],
+        ['nama' => 'SMA 2 Genteng',      'status' => 'Aktif',        'pengguna' => 250, 'tgl' => '10 Sep 2026'],
+        ['nama' => 'SMAN 3 Banyuwangi',  'status' => 'Ditangguhkan', 'pengguna' => 120, 'tgl' => '8 Sep 2026'],
+        ['nama' => 'SMK 1 Cluring',      'status' => 'Aktif',        'pengguna' => 310, 'tgl' => '5 Sep 2026'],
+    ];
+
+    $aktivitas = [
+        ['teks' => 'Sekolah SMAN 1 Banyuwangi baru didaftarkan',       'waktu' => '15 Sep 2026  10:24', 'tone' => 'warn', 'icon' => 'i-school'],
+        ['teks' => 'Kuota sekolah SMKN 1 Banyuwangi diperbarui',       'waktu' => '14 Sep 2026  16:32', 'tone' => 'info', 'icon' => 'i-quota'],
+        ['teks' => 'Status tenant SMA 2 Genteng diubah menjadi Ditangguhkan', 'waktu' => '12 Sep 2026  09:15', 'tone' => 'danger', 'icon' => 'i-alert'],
+    ];
+
+    $chart = [
+        'bulan'    => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep'],
+        'pengguna' => [3800, 4600, 5700, 5900, 6100, 7000, 7800, 8400, 9000],
+        'kelas'    => [2000, 2700, 3100, 3000, 3600, 3800, 4300, 4700, 4900],
+        'sekolah'  => [600, 1000, 1100, 1000, 1300, 1400, 1900, 2300, 2600],
+    ];
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="csrf-token" content="{{ csrf_token() }}">
-<title>Dashboard Super Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard Super Admin – SIKESMA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#0e3a74; --navy-2:#0a2c58; --blue:#2563eb; --green:#10b981; --purple:#8b5cf6; --orange:#f59e0b; --red:#ef4444;
-  --bg:#f1f5fb; --card:#fff; --line:#e6ecf5; --ink:#172b4d; --muted:#6b7a90;
+  color-scheme:light;
+  --navy:#0b2a5c; --navy2:#0a2250; --active:#1f56a8;
+  --bg:#f2f5fa; --card:#fff; --line:#e4eaf3; --ink:#14233f; --muted:#6b7a93; --link:#2563eb;
+  --blue:#2f6fe4; --green:#1fae7a; --purple:#7c5cf0;
+  box-sizing:border-box;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
-.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:13px;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.app{display:flex;min-height:100vh}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
 /* Sidebar */
-.sidebar{background:linear-gradient(180deg,var(--navy),var(--navy-2));color:#fff;display:flex;flex-direction:column;padding:18px 14px;position:sticky;top:0;height:100vh}
-.brand{display:flex;align-items:center;gap:10px;padding:4px 6px 20px}
-.brand .logo{width:36px;height:36px;border-radius:50%;background:#2f6fd6;display:grid;place-items:center}
-.brand b{display:block;font-size:.85rem;line-height:1.2}
-.brand small{font-size:.65rem;opacity:.75}
-.menu{list-style:none;margin:0;padding:0;display:grid;gap:4px}
-.menu a{display:flex;align-items:center;gap:12px;color:#dbe6f7;text-decoration:none;padding:10px 12px;border-radius:8px;font-size:.82rem}
+.side{width:232px;flex:none;background:linear-gradient(180deg,var(--navy),var(--navy2));color:#fff;display:flex;flex-direction:column;padding:18px 10px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 8px 22px}
+.brand .logo{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#5b9bff,#2457b8);display:grid;place-items:center}
+.brand .logo svg{width:18px;height:18px}
+.brand b{display:block;font-size:13px;font-weight:600}
+.brand small{font-size:10px;opacity:.75}
+.menu{display:flex;flex-direction:column;gap:6px;flex:1}
+.menu a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:#e6eefc;text-decoration:none;font-size:12.5px;font-weight:500}
 .menu a:hover{background:rgba(255,255,255,.08)}
-.menu a.active{background:#fff;color:var(--navy);font-weight:600}
-.menu svg,.logout svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.logout{margin-top:auto}
-.logout button{width:100%;display:flex;align-items:center;gap:12px;background:none;border:0;color:#dbe6f7;font:inherit;font-size:.82rem;padding:10px 12px;border-radius:8px;cursor:pointer;text-align:left}
+.menu a.on{background:var(--active);color:#fff;font-weight:600}
+.logout{margin:0}
+.logout button{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:#e6eefc;font-size:12.5px;font-weight:500;cursor:pointer}
 .logout button:hover{background:rgba(255,255,255,.08)}
+.logout button:focus-visible,.menu a:focus-visible{outline:2px solid #9cc2ff}
 
 /* Main */
-.main{padding:22px 24px 30px;min-width:0}
-.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.top h1{margin:0;font-size:1.4rem;font-weight:600}
-.top p{margin:6px 0 18px;color:var(--muted);font-size:.8rem}
-.user{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 6px;font-size:.8rem}
-.avatar{width:30px;height:30px;border-radius:50%;background:var(--navy);display:grid;place-items:center;color:#fff}
-.avatar svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2}
+.main{flex:1;min-width:0;padding:22px 26px 30px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
+.top h1{margin:0 0 6px;font-size:21px;font-weight:700}
+.top p{margin:0;color:#41506b;font-size:12px}
+.user{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);padding:5px 10px 5px 6px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center}
+.avatar svg{width:15px;height:15px}
+.user .chev{width:12px;height:12px;stroke-width:2.5}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 8px rgba(20,50,100,.05)}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
-.stat{padding:14px 16px}
-.stat .head{display:flex;align-items:center;gap:12px}
-.chip{width:42px;height:42px;border-radius:10px;display:grid;place-items:center}
-.chip svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.blue{background:#e3edff;color:var(--blue)} .green{background:#d9f5ea;color:#0f9f6e}
-.orange{background:#fdecd0;color:#d98206} .purple{background:#ebe3ff;color:#6d3fe0} .red{background:#fde0e0;color:#d93636}
-.stat small{display:block;color:var(--muted);font-size:.72rem}
-.stat strong{font-size:1.5rem;font-weight:600;line-height:1.2}
-.stat .note{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:.66rem;color:var(--muted);text-align:center}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px rgba(20,35,63,.05)}
+.stat{padding:16px 16px 12px}
+.stat .row{display:flex;align-items:center;gap:12px}
+.ico{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;flex:none}
+.ico .i{width:20px;height:20px}
+.blue{background:#e4edff;color:#2f6fe4}.green{background:#dcf3e8;color:#1f9d63}.orange{background:#ffeed6;color:#e58a1f}.purple{background:#e9e4ff;color:#6a4fe0}
+.stat .lb{font-size:11.5px;color:#41506b;font-weight:500}
+.stat .val{font-size:26px;font-weight:700;line-height:1.1;margin-top:2px}
+.stat .foot{margin-top:12px;padding-top:9px;border-top:1px solid var(--line);text-align:center;font-size:10.5px;color:var(--muted)}
 
-.row{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;margin-bottom:16px}
-.panel{padding:14px 16px}
-.panel h3{margin:0;font-size:.85rem;font-weight:600}
-.panel .bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap}
-.panel .bar a{font-size:.7rem;color:var(--blue);text-decoration:none;font-weight:500}
-.legend{display:flex;gap:14px;font-size:.7rem;color:var(--muted)}
-.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.mid{display:grid;grid-template-columns:1.12fr 1fr;gap:14px;margin-bottom:14px}
+.panel{padding:16px}
+.panel h3{margin:0;font-size:13px;font-weight:700}
+.panel .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.link{color:var(--link);font-size:11px;font-weight:600;text-decoration:none}
+.legend{display:flex;gap:14px;font-size:11px;color:#41506b;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
 #chart{width:100%;height:auto;display:block}
+#chart text{font-family:inherit;font-size:10px;fill:#6b7a93}
 
-table{width:100%;border-collapse:collapse;font-size:.74rem}
-th{background:#f3f7fd;text-align:left;padding:9px 10px;font-weight:600;color:#33445f}
-td{padding:11px 10px;border-bottom:1px solid var(--line)}
-tr:last-child td{border-bottom:0}
-.badge{display:inline-block;padding:2px 10px;border-radius:6px;font-size:.68rem;font-weight:500;border:1px solid}
-.badge.aktif{background:#e1f7ec;color:#0f9f6e;border-color:#9fe0c3}
-.badge.nonaktif{background:#eef1f5;color:#5b6678;border-color:#cdd5e0}
-.flash{background:#e1f7ec;border:1px solid #9fe0c3;color:#0b7a55;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:.78rem}
-.badge.tangguh{background:#fdecd0;color:#c77405;border-color:#f3c47a}
-.table-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.tbl th{background:#f0f4fa;text-align:left;font-weight:600;color:#41506b;padding:9px 12px;font-size:11px}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--line)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td:first-child{font-weight:500}
+.tblwrap{overflow-x:auto;margin:0 -16px -16px}
+.badge{display:inline-block;padding:2px 9px;border-radius:6px;font-size:10.5px;font-weight:600;border:1px solid}
+.b-aktif{background:#e7f7ee;border-color:#9edbb8;color:#1b9a58}
+.b-tangguh{background:#fff1dc;border-color:#f4c27d;color:#d8801f}
 
-.acts{list-style:none;margin:0;padding:0}
-.acts li{display:flex;align-items:center;gap:12px;padding:9px 0;font-size:.76rem}
-.acts li .dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none}
-.acts li .dot svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.acts li span.t{margin-left:auto;color:var(--muted);font-size:.68rem;white-space:nowrap}
+.act{display:flex;align-items:center;gap:12px;padding:8px 0}
+.act .dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none}
+.act .dot .i{width:14px;height:14px}
+.warn{background:#fff1dc;color:#e58a1f}.info{background:#dcebff;color:#2f6fe4}.danger{background:#ffe1e1;color:#dc3b3b}
+.act .t{flex:1;color:#2a3956;font-size:12px}
+.act .w{color:var(--muted);font-size:11px;white-space:pre}
 
-@media (max-width:1100px){.stats{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}}
+@media (max-width:1100px){.cards{grid-template-columns:repeat(2,1fr)}.mid{grid-template-columns:1fr}}
 @media (max-width:820px){
-  .app{grid-template-columns:64px 1fr}
-  .sidebar{padding:14px 8px}
-  .brand div,.menu a span,.logout button span{display:none}
-  .menu a,.logout button{justify-content:center;padding:10px}
-  .brand{justify-content:center;padding-bottom:16px}
-  .main{padding:16px 14px}
+  .app{flex-direction:column}
+  .side{width:100%;height:auto;position:static;flex-direction:row;align-items:center;overflow-x:auto;padding:10px;gap:8px}
+  .brand{padding:0 8px 0 0}.brand small{display:none}
+  .menu{flex-direction:row;flex:none}.menu a{white-space:nowrap}
+  .logout{flex:none}.logout button{white-space:nowrap}
+  .main{padding:18px 14px 26px}
+  .top{flex-direction:column}
+  .act{flex-wrap:wrap}.act .w{white-space:normal;width:100%;padding-left:40px}
 }
-@media (max-width:520px){.stats{grid-template-columns:1fr}.user span{display:none}}
+@media (max-width:520px){.cards{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-@php
-  $icons = [
-    'dashboard' => 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z',
-    'school'    => 'M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6',
-    'users'     => 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 3.5-6 8-6s8 2 8 6',
-    'monitor'   => 'M3 4h18v12H3zM8 21h8M12 16v5',
-    'quota'     => 'M12 3a9 9 0 1 0 9 9h-9zM15 3.6A9 9 0 0 1 20.4 9H15z',
-    'audit'     => 'M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6',
-    'check'     => 'M4 4h16v16H4zM8 12l3 3 5-6',
-    'class'     => 'M3 5h18v11H3zM8 21h8M12 16v5M7 9h10',
-    'alert'     => 'M12 3 2 20h20zM12 10v5M12 18h.01',
-    'info'      => 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 8h.01',
-    'plus'      => 'M12 5v14M5 12h14',
-  ];
-  $menu = [
-    ['Dashboard', 'dashboard', route('super-admin.dashboard'), true],
-    ['Manajemen Sekolah', 'school', route('super-admin.tenants.index'), false],
-    ['Pengguna', 'users', '#', false],
-    ['Monitoring Sistem', 'monitor', '#', false],
-    ['Manajemen Kuota', 'quota', '#', false],
-    ['Audit Log', 'audit', '#', false],
-    ['Profil', 'users', route('profile.edit'), false],
-  ];
-  $actIcon = ['orange' => 'plus', 'blue' => 'info', 'red' => 'alert'];
-@endphp
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-school" viewBox="0 0 24 24"><path d="M4 21V6l8-3 8 3v15M2 21h20M9 21v-5h6v5M9 9h2M13 9h2M9 12.500h2M13 12.500h2"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.500"/><path d="M5 20c0-3.800 3-6 7-6s7 2.200 7 6"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+    <symbol id="i-quota" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12l3.500-3.500M12 7v1.500M7 12h1.500"/></symbol>
+    <symbol id="i-audit" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 21V6l8-3 8 3v15M2 21h20"/><path d="M8.500 12.500l2.500 2.500 4.500-5"/></symbol>
+    <symbol id="i-class" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 9h4M7 13h10M8 21h8"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  </defs>
+</svg>
 
 <div class="app">
-  <aside class="sidebar">
+  <aside class="side">
     <div class="brand">
-      <span class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11.500V16c0 1.200 2.200 2.500 5 2.500s5-1.300 5-2.500v-4.500"/></svg></span>
+      <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 3 8.500l9 4.500 9-4.500z" fill="#fff"/><path d="M7 11v4c0 1.500 2.200 3 5 3s5-1.500 5-3v-4"/></svg></span>
       <div><b>Sistem Informasi</b><small>LMS Multi Tenant</small></div>
     </div>
-    <ul class="menu">
-      @foreach ($menu as [$label, $icon, $url, $active])
-        <li><a href="{{ $url }}" class="{{ $active ? 'active' : '' }}">
-          <svg viewBox="0 0 24 24"><path d="{{ $icons[$icon] }}"/></svg><span>{{ $label }}</span>
-        </a></li>
-      @endforeach
-    </ul>
+    <nav class="menu">
+      <a href="{{ route('dashboard') }}" class="on"><svg class="i"><use href="#i-home"/></svg>Dashboard</a>
+      <a href="#"><svg class="i"><use href="#i-school"/></svg>Manajemen Sekolah</a>
+      <a href="#"><svg class="i"><use href="#i-users"/></svg>Pengguna</a>
+      <a href="#"><svg class="i"><use href="#i-monitor"/></svg>Monitoring Sistem</a>
+      <a href="#"><svg class="i"><use href="#i-quota"/></svg>Manajemen Kuota</a>
+      <a href="#"><svg class="i"><use href="#i-audit"/></svg>Audit Log</a>
+      <a href="#"><svg class="i"><use href="#i-users"/></svg>Profil</a>
+    </nav>
     <form class="logout" method="POST" action="{{ route('logout') }}">
       @csrf
-      <button type="submit">
-        <svg viewBox="0 0 24 24"><path d="M9 21H5V3h4M16 17l5-5-5-5M21 12H9"/></svg><span>Logout</span>
-      </button>
+      <button type="submit"><svg class="i"><use href="#i-logout"/></svg>Logout</button>
     </form>
   </aside>
 
   <main class="main">
-    <div class="top">
+    <header class="top">
       <div>
         <h1>Dashboard Super Admin</h1>
-        <p>Selamat datang, {{ auth()->user()->name ?? 'Super Admin' }}. Berikut adalah ringkasan sistem secara keseluruhan.</p>
+        <p>Selamat datang, {{ $namaUser }}. Berikut adalah ringkasan sistem secara keseluruhan.</p>
       </div>
       <div class="user">
-        <span class="avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.500-6 8-6s8 2 8 6"/></svg></span>
-        <span>{{ auth()->user()->name ?? 'Super Admin' }}</span>
+        <span class="avatar"><svg class="i"><use href="#i-users"/></svg></span>
+        {{ $namaUser }}
+        <svg class="i chev"><use href="#i-chev"/></svg>
       </div>
-    </div>
+    </header>
 
-    @if (session('success'))
-      <div class="flash" role="status">{{ session('success') }}</div>
-    @endif
-
-    <section class="stats">
+    <section class="cards">
       @foreach ($stats as $s)
-        <div class="card stat">
-          <div class="head">
-            <span class="chip {{ $s['tone'] }}"><svg viewBox="0 0 24 24"><path d="{{ $icons[$s['icon']] }}"/></svg></span>
-            <div><small>{{ $s['label'] }}</small><strong>{{ $s['value'] }}</strong></div>
+        <article class="card stat">
+          <div class="row">
+            <span class="ico {{ $s['tone'] }}"><svg class="i"><use href="#{{ $s['icon'] }}"/></svg></span>
+            <div><div class="lb">{{ $s['label'] }}</div><div class="val">{{ $s['value'] }}</div></div>
           </div>
-          <div class="note">{{ $s['note'] }}</div>
-        </div>
+          <div class="foot">{{ $s['foot'] }}</div>
+        </article>
       @endforeach
     </section>
 
-    <section class="row">
-      <div class="card panel">
-        <div class="bar">
+    <section class="mid">
+      <article class="card panel">
+        <div class="hd">
           <h3>Statistik Penggunaan Sistem</h3>
           <div class="legend">
             <span><i style="background:var(--blue)"></i>Pengguna</span>
@@ -177,40 +206,38 @@ tr:last-child td{border-bottom:0}
             <span><i style="background:var(--purple)"></i>Sekolah</span>
           </div>
         </div>
-        <svg id="chart" viewBox="0 0 560 250" role="img" aria-label="Grafik statistik penggunaan sistem"></svg>
-      </div>
+        <svg id="chart" viewBox="0 0 560 260" role="img" aria-label="Grafik statistik penggunaan sistem"></svg>
+      </article>
 
-      <div class="card panel">
-        <div class="bar"><h3>Sekolah Terbaru</h3><span><a href="{{ route('super-admin.tenants.create') }}">+ Tambah Sekolah</a> &nbsp;&middot;&nbsp; <a href="{{ route('super-admin.tenants.index') }}">Lihat semua</a></span></div>
-        <div class="table-wrap">
-          <table>
+      <article class="card panel">
+        <div class="hd"><h3>Sekolah Terbaru</h3><a href="#" class="link">Lihat semua</a></div>
+        <div class="tblwrap">
+          <table class="tbl">
             <thead><tr><th>Nama Sekolah</th><th>Status</th><th>Pengguna</th><th>Tgl Daftar</th></tr></thead>
             <tbody>
-              @foreach ($schools as $sc)
+              @foreach ($sekolah as $r)
                 <tr>
-                  <td>{{ $sc['nama'] }}</td>
-                  <td><span class="badge {{ $sc['badge'] }}">{{ $sc['status'] }}</span></td>
-                  <td>{{ $sc['pengguna'] }}</td>
-                  <td>{{ $sc['tgl'] }}</td>
+                  <td>{{ $r['nama'] }}</td>
+                  <td><span class="badge {{ $r['status'] === 'Aktif' ? 'b-aktif' : 'b-tangguh' }}">{{ $r['status'] }}</span></td>
+                  <td>{{ $r['pengguna'] }}</td>
+                  <td>{{ $r['tgl'] }}</td>
                 </tr>
               @endforeach
             </tbody>
           </table>
         </div>
-      </div>
+      </article>
     </section>
 
     <section class="card panel">
-      <div class="bar"><h3>Aktivitas Sistem Terbaru</h3></div>
-      <ul class="acts">
-        @foreach ($activities as $a)
-          <li>
-            <span class="dot {{ $a['tone'] }}"><svg viewBox="0 0 24 24"><path d="{{ $icons[$actIcon[$a['tone']]] }}"/></svg></span>
-            {{ $a['text'] }}
-            <span class="t">{{ $a['time'] }}</span>
-          </li>
-        @endforeach
-      </ul>
+      <div class="hd"><h3>Aktivitas Sistem Terbaru</h3><a href="#" class="link">Lihat semua</a></div>
+      @foreach ($aktivitas as $a)
+        <div class="act">
+          <span class="dot {{ $a['tone'] }}"><svg class="i"><use href="#{{ $a['icon'] }}"/></svg></span>
+          <span class="t">{{ $a['teks'] }}</span>
+          <span class="w">{{ $a['waktu'] }}</span>
+        </div>
+      @endforeach
     </section>
   </main>
 </div>
@@ -219,47 +246,32 @@ tr:last-child td{border-bottom:0}
 (function () {
   var data = @json($chart);
   var svg = document.getElementById('chart'), NS = 'http://www.w3.org/2000/svg';
-  var W = 560, H = 250, L = 46, R = 12, T = 10, B = 28;
-  var peak = Math.max.apply(null, data.pengguna.concat(data.kelas, data.sekolah, [1]));
-  var raw = peak / 5, pow = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10)), m = raw / pow;
-  var step = (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * pow;
-  var max = Math.ceil(peak / step) * step;
+  var W = 560, H = 260, L = 46, R = 14, T = 12, B = 28, YMAX = 10000, n = data.bulan.length;
   var series = [
-    { key: 'pengguna', color: '#2563eb', area: true },
-    { key: 'kelas',    color: '#10b981' },
-    { key: 'sekolah',  color: '#8b5cf6' }
+    { key: 'pengguna', color: '#2f6fe4', area: true },
+    { key: 'kelas',    color: '#1fae7a' },
+    { key: 'sekolah',  color: '#7c5cf0' }
   ];
-
+  function x(i) { return L + i * (W - L - R) / (n - 1); }
+  function y(v) { return T + (H - T - B) * (1 - v / YMAX); }
   function el(name, attrs, text) {
-    var n = document.createElementNS(NS, name);
-    for (var k in attrs) n.setAttribute(k, attrs[k]);
-    if (text) n.textContent = text;
-    svg.appendChild(n);
-    return n;
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    svg.appendChild(e); return e;
   }
-  function x(i) { return L + i * (W - L - R) / (data.labels.length - 1); }
-  function y(v) { return T + (1 - v / max) * (H - T - B); }
-
-  for (var v = 0; v <= max; v += step) {
-    el('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: '#e6ecf5', 'stroke-width': 1 });
-    el('text', { x: L - 8, y: y(v) + 3, 'text-anchor': 'end', 'font-size': 9, fill: '#6b7a90' }, v.toLocaleString('id-ID'));
+  for (var g = 0; g <= YMAX; g += 2000) {
+    el('line', { x1: L, x2: W - R, y1: y(g), y2: y(g), stroke: '#e6ecf5', 'stroke-width': 1 });
+    el('text', { x: L - 8, y: y(g) + 3, 'text-anchor': 'end' }, g.toLocaleString('id-ID'));
   }
-  data.labels.forEach(function (lb, i) {
-    el('text', { x: x(i), y: H - 8, 'text-anchor': 'middle', 'font-size': 9, fill: '#6b7a90' }, lb);
-  });
-
+  data.bulan.forEach(function (b, i) { el('text', { x: x(i), y: H - 8, 'text-anchor': 'middle' }, b); });
   series.forEach(function (s) {
-    var pts = data[s.key].map(function (v, i) { return x(i) + ',' + y(v); });
+    var v = data[s.key], pts = v.map(function (val, i) { return x(i) + ',' + y(val); }).join(' ');
     if (s.area) {
-      el('polygon', { points: x(0) + ',' + y(0) + ' ' + pts.join(' ') + ' ' + x(data.labels.length - 1) + ',' + y(0), fill: s.color, opacity: .08 });
+      el('polygon', { points: x(0) + ',' + y(0) + ' ' + pts + ' ' + x(n - 1) + ',' + y(0), fill: '#2f6fe4', 'fill-opacity': .09 });
     }
-    el('polyline', { points: pts.join(' '), fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round' });
-    data[s.key].forEach(function (v, i) {
-      var c = el('circle', { cx: x(i), cy: y(v), r: 3, fill: '#fff', stroke: s.color, 'stroke-width': 2 });
-      var t = document.createElementNS(NS, 'title');
-      t.textContent = s.key + ' ' + data.labels[i] + ': ' + v.toLocaleString('id-ID');
-      c.appendChild(t);
-    });
+    el('polyline', { points: pts, fill: 'none', stroke: s.color, 'stroke-width': 2.2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' });
+    v.forEach(function (val, i) { el('circle', { cx: x(i), cy: y(val), r: 2.8, fill: '#fff', stroke: s.color, 'stroke-width': 1.6 }); });
   });
 })();
 </script>
