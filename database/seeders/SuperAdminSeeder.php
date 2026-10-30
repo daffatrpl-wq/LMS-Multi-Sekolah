@@ -18,7 +18,7 @@ class SuperAdminSeeder extends Seeder
         $user->forceFill([
             'name'              => 'Kelompok 5',
             'password'          => Hash::make(env('SUPER_ADMIN_PASSWORD', 'kelompok5')),
-            'role'              => 'super_admin',
+            'role'              => 'SuperAdmin',
             'school_id'         => null,
             'is_active'         => true,
             'email_verified_at' => now(),

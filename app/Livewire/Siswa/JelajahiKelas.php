@@ -6,6 +6,7 @@ use App\Models\Enrollment;
 use App\Models\Kelas;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Auth;
 
 class JelajahiKelas extends Component
 {
@@ -16,7 +17,7 @@ class JelajahiKelas extends Component
 
     public function mount(): void
     {
-        abort_unless(auth()->user()->role === 'student', 403);
+        abort_unless(Auth::user()->role === 'student', 403);
     }
 
     public function updatingSearch(): void
@@ -58,7 +59,7 @@ class JelajahiKelas extends Component
     private function daftar(Kelas $kelas): void
     {
         $enrollment = Enrollment::where('class_id', $kelas->id)
-            ->where('user_id', auth()->id())
+            ->where('user_id', Auth::id())
             ->first();
 
         // Alur 4b: sudah terdaftar / menunggu -> jangan buat enrollment ganda
@@ -76,7 +77,7 @@ class JelajahiKelas extends Component
         } else {
             Enrollment::create([
                 'class_id' => $kelas->id,
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'status' => $status,
             ]);
         }
@@ -101,7 +102,7 @@ class JelajahiKelas extends Component
             ->latest()
             ->paginate(10);
 
-        $statusSaya = Enrollment::where('user_id', auth()->id())
+        $statusSaya = Enrollment::where('user_id', Auth::id())
             ->pluck('status', 'class_id');
 
         return view('livewire.siswa.jelajahi-kelas', compact('daftarKelas', 'statusSaya'));
