@@ -69,6 +69,6 @@ class DashboardController extends Controller
                     'time' => $s->updated_at->locale('id')->translatedFormat('d M Y H:i')];
         });
 
-        return view('super_admin.dashboard', compact('stats', 'chart', 'schools', 'activities'));
+        return view('SuperAdmin.dashboard', compact('stats', 'chart', 'schools', 'activities'));
     }
 }

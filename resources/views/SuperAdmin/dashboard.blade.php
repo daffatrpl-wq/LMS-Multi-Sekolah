@@ -158,7 +158,7 @@ body{margin:0;font-family:'Inter',system-ui,sans-serif;background:var(--bg);colo
     </div>
     <nav class="menu">
       <a href="{{ route('dashboard') }}" class="on"><svg class="i"><use href="#i-home"/></svg>Dashboard</a>
-      <a href="#"><svg class="i"><use href="#i-school"/></svg>Manajemen Sekolah</a>
+      <a href="{{ route('super-admin.tenants.create') }}"><svg class="i"><use href="#i-school"/></svg>Manajemen Sekolah</a>
       <a href="#"><svg class="i"><use href="#i-users"/></svg>Pengguna</a>
       <a href="#"><svg class="i"><use href="#i-monitor"/></svg>Monitoring Sistem</a>
       <a href="#"><svg class="i"><use href="#i-quota"/></svg>Manajemen Kuota</a>
