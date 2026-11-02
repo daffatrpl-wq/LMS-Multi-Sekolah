@@ -4,7 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-// Lewati file ini kalau tabel classes sudah ada di project.
 return new class extends Migration
 {
     public function up(): void
@@ -18,7 +17,7 @@ return new class extends Migration
             $table->text('deskripsi')->nullable();
             $table->string('kode_undangan', 8)->unique();
             $table->boolean('perlu_persetujuan')->default(false);
-            $table->string('status', 20)->default('aktif'); // aktif | nonaktif
+            $table->string('status', 20)->default('aktif');
             $table->timestamps();
 
             $table->index(['school_id', 'status']);

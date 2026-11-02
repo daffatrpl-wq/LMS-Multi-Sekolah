@@ -1,31 +1,3 @@
-@php
-    // Data contoh — ganti dengan data dari database (misalnya lewat controller / Livewire).
-    // status: 'belum' | 'selesai'
-    $daftar = [
-        [1,  'Tugas Web Server',          'Desain Web',        '2 Sep 2025',  'belum'],
-        [2,  'Laporan Basis Data',        'Basis Data',        '4 Sep 2025',  'belum'],
-        [3,  'Tugas Algoritma',           'Pemrograman Dasar', '1 Sep 2025',  'selesai'],
-        [4,  'Presentasi UI/UX',          'Desain Web',        '6 Sep 2025',  'belum'],
-        [5,  'Tugas Individu',            'Matematika',        '5 Sep 2025',  'belum'],
-        [6,  'Latihan Soal Integral',     'Matematika',        '8 Sep 2025',  'belum'],
-        [7,  'Makalah Literasi Digital',  'Bahasa Indonesia',  '9 Sep 2025',  'belum'],
-        [8,  'Quiz SQL Dasar',            'Basis Data',        '28 Agu 2025', 'selesai'],
-        [9,  'Proyek CRUD Laravel',       'Pemrograman Dasar', '12 Sep 2025', 'belum'],
-        [10, 'Resume Bab 3',              'Bahasa Indonesia',  '26 Agu 2025', 'selesai'],
-        [11, 'Wireframe Aplikasi',        'Desain Web',        '10 Sep 2025', 'belum'],
-        [12, 'Tugas Statistika',          'Matematika',        '25 Agu 2025', 'selesai'],
-    ];
-
-    $tugas = collect($daftar)->map(fn ($r) => [
-        'id'     => $r[0],
-        'judul'  => $r[1],
-        'mapel'  => $r[2],
-        'tenggat'=> $r[3],
-        'status' => $r[4],
-        'url'    => route('siswa.tugas.kumpul', $r[0]),
-    ])->values();
-@endphp
-
 <x-siswa-layout title="Tugas" subtitle="Daftar tugas yang perlu kamu kerjakan.">
 
 <style>

@@ -11,7 +11,6 @@ enum Role: string {
     }
 }
 
-// Support/Tenancy/BelongsToTenant.php — fail-closed
 static::addGlobalScope('tenant', function (Builder $q) {
     $ctx = app(TenantContext::class);
     if ($ctx->isPlatform()) return;                       // hanya super admin, eksplisit

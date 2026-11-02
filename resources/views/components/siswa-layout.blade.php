@@ -1,6 +1,10 @@
-@props(['title' => 'Dashboard Siswa', 'subtitle' => null, 'tagline' => null, 'sekolah' => 'SMA 1 Banyuwangi', 'kelas' => 'XI RPL 1'])
+@props(['title' => 'Dashboard Siswa', 'subtitle' => null, 'tagline' => null, 'sekolah' => null, 'kelas' => null])
 @php
     $namaUser = request()->user()?->name ?? 'Siswa';
+    // Nama sekolah diambil dari data sekolah milik siswa
+    $namaSekolah = $sekolah ?: (request()->user()?->school_id
+        ? \Illuminate\Support\Facades\DB::table('schools')->where('id', request()->user()->school_id)->value('name')
+        : null) ?: 'LMS Multi Tenant';
 
     // [label, nama route (null = belum ada halamannya), ikon]
     $menu = [
@@ -191,7 +195,7 @@ body{margin:0;font-family:'Inter',system-ui,sans-serif;background:var(--bg);colo
   <aside class="side">
     <div class="brand">
       <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 3 8.500l9 4.500 9-4.500z" fill="#fff"/><path d="M7 11v4c0 1.500 2.200 3 5 3s5-1.500 5-3v-4"/></svg></span>
-      <div><b>Sistem Informasi</b><small>{{ $sekolah }}</small></div>
+      <div><b>Sistem Informasi</b><small>{{ $namaSekolah }}</small></div>
     </div>
     <nav class="menu">
       @foreach ($menu as [$label, $route, $icon])
@@ -217,7 +221,7 @@ body{margin:0;font-family:'Inter',system-ui,sans-serif;background:var(--bg);colo
         <details class="usermenu">
           <summary class="user">
             <span class="avatar"><svg class="i"><use href="#i-users"/></svg></span>
-            <span class="nm">{{ $namaUser }}<small>Siswa · {{ $kelas }}</small></span>
+            <span class="nm">{{ $namaUser }}<small>Siswa{{ $kelas ? ' · '.$kelas : '' }}</small></span>
             <svg class="i chev"><use href="#i-chev"/></svg>
           </summary>
           <div class="dd">

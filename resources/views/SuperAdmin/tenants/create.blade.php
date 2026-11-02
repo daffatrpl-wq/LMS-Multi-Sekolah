@@ -73,7 +73,7 @@
                 </div>
             </div>
             <div class="factions">
-                <a href="{{ route('dashboard') }}" class="bt ghost">Batal</a>
+                <a href="{{ route('super-admin.tenants.index') }}" class="bt ghost">Batal</a>
                 <button type="submit" class="bt pri" id="btnSimpan">Daftarkan Sekolah</button>
             </div>
         </section>

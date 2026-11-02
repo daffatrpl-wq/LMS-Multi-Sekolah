@@ -16,19 +16,17 @@ return new class extends Migration
             $table->text('jawaban_teks')->nullable();
             $table->string('file_path')->nullable();
             $table->string('file_nama')->nullable();
-            $table->string('status', 20)->default('terkumpul'); // terkumpul | terlambat | dinilai
+            $table->string('status', 20)->default('terkumpul');
             $table->unsignedInteger('versi')->default(1);
             $table->dateTime('submitted_at');
-            $table->unsignedSmallInteger('nilai')->nullable();   // diisi guru (FR-GR-03)
-            $table->text('umpan_balik')->nullable();             // diisi guru
+            $table->unsignedSmallInteger('nilai')->nullable();
+            $table->text('umpan_balik')->nullable();
             $table->timestamps();
 
-            // Satu siswa hanya punya satu pengumpulan per tugas
             $table->unique(['school_id', 'assignment_id', 'user_id']);
             $table->index(['school_id', 'user_id']);
         });
 
-        // Riwayat versi pengumpulan (alur alternatif 3b di UC-09)
         Schema::create('submission_versions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained('schools')->cascadeOnDelete();

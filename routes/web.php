@@ -1,9 +1,9 @@
-
 <?php
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuperAdmin\TenantController;
+use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\TugasController;
 
 use App\Livewire\Siswa\KelasSaya;
@@ -43,6 +43,8 @@ Route::middleware(['auth', 'role:super_admin'])
     ->name('super-admin.')
     ->group(function () {
         Route::resource('tenants', TenantController::class);
+        Route::patch('tenants/{tenant}/status', [TenantController::class, 'toggleStatus'])
+            ->name('tenants.status');
         Route::view('/dashboard', 'SuperAdmin.dashboard')
             ->name('dashboard');
     });
@@ -56,8 +58,8 @@ Route::middleware(['auth', 'role:student'])
     ->name('siswa.')
     ->group(function () {
 
-        // Dashboard Siswa
-        Route::view('/dashboard', 'livewire.siswa.dashboard')
+        // Dashboard Siswa (data dari database)
+        Route::get('/dashboard', [SiswaDashboardController::class, 'index'])
             ->name('dashboard');
 
         // Kelas

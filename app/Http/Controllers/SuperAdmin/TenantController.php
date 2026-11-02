@@ -11,10 +11,55 @@ use Illuminate\Support\Str;
 
 class TenantController extends Controller
 {
-    // Sementara: daftar sekolah belum dibuat, arahkan ke form tambah sekolah.
-    public function index()
+    public function index(Request $request)
     {
-        return redirect()->route('super-admin.tenants.create');
+        $q = trim((string) $request->query('q', ''));
+
+        $schools = DB::table('schools')
+            ->select('schools.*')
+            // jumlah semua pengguna di sekolah tersebut
+            ->selectSub(
+                DB::table('users')->selectRaw('count(*)')->whereColumn('users.school_id', 'schools.id'),
+                'users_count'
+            )
+            // nama admin sekolah (admin pertama yang terdaftar)
+            ->selectSub(
+                DB::table('users')->select('name')
+                    ->whereColumn('users.school_id', 'schools.id')
+                    ->where('role', 'school_admin')
+                    ->orderBy('id')->limit(1),
+                'admin_name'
+            )
+            ->when($q !== '', fn ($b) => $b->where('schools.name', 'like', '%'.$q.'%'))
+            ->orderByDesc('schools.id')
+            ->paginate(5)
+            ->withQueryString();
+
+        return view('SuperAdmin.tenants.index', compact('schools', 'q'));
+    }
+
+    // Tangguhkan / aktifkan sekolah
+    public function toggleStatus(int $tenant)
+    {
+        $school = DB::table('schools')->where('id', $tenant)->first();
+        abort_if(! $school, 404);
+
+        $baru = $school->status === 'active' ? 'suspended' : 'active';
+
+        DB::table('schools')->where('id', $tenant)->update(['status' => $baru, 'updated_at' => now()]);
+
+        return back()->with('status', 'Status '.$school->name.' diubah menjadi '.($baru === 'active' ? 'Aktif' : 'Ditangguhkan').'.');
+    }
+
+    // Sementara: halaman detail dan edit belum dibuat
+    public function show(string $tenant)
+    {
+        return redirect()->route('super-admin.tenants.index')->with('status', 'Halaman detail sekolah belum tersedia.');
+    }
+
+    public function edit(string $tenant)
+    {
+        return redirect()->route('super-admin.tenants.index')->with('status', 'Halaman edit sekolah belum tersedia.');
     }
 
     public function create()
@@ -27,7 +72,7 @@ class TenantController extends Controller
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:255', 'unique:schools,name'],
             'address'     => ['required', 'string', 'max:255'],
-            'email'       => ['required', 'email', 'max:255', 'unique:schools,email'],
+            'email'       => ['required', 'email', 'max:255', 'unique:schools,contact_email'],
             'phone'       => ['required', 'regex:/^[0-9+\-\s]{8,20}$/'],
             'admin_name'  => ['required', 'string', 'max:255'],
             'admin_email' => ['required', 'email', 'max:255', 'unique:users,email'],
@@ -59,7 +104,7 @@ class TenantController extends Controller
             $schoolId = DB::table('schools')->insertGetId([
                 'name'        => $data['name'],
                 'address'     => $data['address'],
-                'email'       => $data['email'],
+                'contact_email' => $data['email'],
                 'phone'       => $data['phone'],
                 'status'      => 'active',
                 'max_users'   => $data['max_users'],
