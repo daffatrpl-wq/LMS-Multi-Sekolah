@@ -2,8 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Modules\AdminSekolah\Http\Livewire\Dashboard;
+use App\Modules\AdminSekolah\Http\Livewire\ManageUsers;
 
-Route::middleware(['auth', 'role:admin,admin_sekolah'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin,school_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
 });
 

@@ -32,7 +32,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('siswa.dashboard'));
         }
 
-        if ($user->role === 'admin' || $user->role === 'admin_sekolah') {
+        if ($user->role === 'admin' || $user->role === 'school_admin') {
             return redirect()->intended(route('admin.dashboard'));
         }
 
