@@ -33,7 +33,7 @@ class AuthenticatedSessionController extends Controller
 
         // Alihkan halaman berdasarkan role user
         if ($user->role === 'super_admin') {
-            return redirect()->intended(route('super-admin.tenants.index'));
+            return redirect()->intended(route('super-admin.dashboard'));
         } 
         
         if ($user->role === 'student' || $user->role === 'siswa') {
