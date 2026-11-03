@@ -1,64 +1,82 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SuperAdmin\TenantController;
+use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
+use App\Http\Controllers\Siswa\TugasController;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use App\Livewire\Siswa\KelasSaya;
+use App\Livewire\Siswa\JelajahiKelas;
+use App\Livewire\Siswa\KumpulkanTugas;
 
-class AuthenticatedSessionController extends Controller
-{
-    /**
-     * Display the login view.
-     */
-    public function create(): View
-    {
-        return view('auth.login');
-    }
+// Halaman Login
+Route::get('/', function () {
+    return view('auth.login');
+})->middleware('guest');
 
-    /**
-     * Handle an incoming authentication request.
-     */
-    public function store(LoginRequest $request): RedirectResponse
-    {
-        $request->authenticate();
+// Dashboard berdasarkan Role
+Route::get('/dashboard', function () {
+    return match (request()->user()->role) {
+        'super_admin' => view('SuperAdmin.dashboard'),
+        'student' => redirect()->route('siswa.dashboard'),
+        // TODO: Tambahkan redirect school_admin dan teacher
+        default => abort(403, 'Role tidak dikenali.'),
+    };
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-        $request->session()->regenerate();
+// Rute Profile
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
 
-        // Ambil data user yang sedang login
-       $user = Auth::user();
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
 
-        // Alihkan halaman berdasarkan role user
-        if ($user->role === 'super_admin') {
-            return redirect()->intended(route('super-admin.dashboard'));
-        } 
-        
-        if ($user->role === 'student' || $user->role === 'siswa') {
-            return redirect()->intended(route('siswa.dashboard'));
-        }
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
+});
 
-        if ($user->role === 'admin' || $user->role === 'admin_sekolah') {
-            return redirect()->intended(route('admin.dashboard'));
-        }
+// Rute Super Admin
+Route::middleware(['auth', 'role:super_admin'])
+    ->prefix('super-admin')
+    ->name('super-admin.')
+    ->group(function () {
+        Route::resource('tenants', TenantController::class);
+        Route::patch('tenants/{tenant}/status', [TenantController::class, 'toggleStatus'])
+            ->name('tenants.status');
+        Route::view('/dashboard', 'SuperAdmin.dashboard')
+            ->name('dashboard');
+    });
 
-        // Fallback default jika role lain
-        return redirect()->intended(route('dashboard', absolute: false));
-    }
+// Rute Authentication
+require __DIR__ . '/auth.php';
 
-    /**
-     * Destroy an authenticated session.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        Auth::guard('web')->logout();
+// Rute khusus Siswa
+Route::middleware(['auth', 'role:student'])
+    ->prefix('siswa')
+    ->name('siswa.')
+    ->group(function () {
 
-        $request->session()->invalidate();
+        // Dashboard Siswa (data dari database)
+        Route::get('/dashboard', [SiswaDashboardController::class, 'index'])
+            ->name('dashboard');
 
-        $request->session()->regenerateToken();
+        // Kelas
+        Route::get('/kelas-saya', KelasSaya::class)
+            ->name('kelas-saya');
 
-        return redirect('/');
-    }
-}
+        Route::get('/jelajahi', JelajahiKelas::class)
+            ->name('jelajahi');
+
+        // Daftar Tugas
+        Route::get('/tugas', [TugasController::class, 'index'])
+            ->name('tugas');
+
+        // Detail dan Pengumpulan Tugas
+        Route::get('/tugas/{assignment}', KumpulkanTugas::class)
+            ->name('tugas.kumpul');
+    });
+
+// Rute Modular Admin Sekolah
+require base_path('app/Modules/AdminSekolah/routes/web.php');

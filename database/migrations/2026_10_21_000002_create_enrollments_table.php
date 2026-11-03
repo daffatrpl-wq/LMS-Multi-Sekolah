@@ -13,12 +13,10 @@ return new class extends Migration
             $table->foreignId('school_id')->constrained('schools')->cascadeOnDelete();
             $table->foreignId('class_id')->constrained('classes')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('status', 20)->default('aktif'); // menunggu | aktif | keluar
+            $table->string('status', 20)->default('aktif');
             $table->timestamps();
 
-            // Mencegah enrollment ganda (alur alternatif 4b di UC-08)
             $table->unique(['school_id', 'class_id', 'user_id']);
-            // Indeks komposit sesuai NFR-DAT-03
             $table->index(['school_id', 'user_id']);
         });
     }

@@ -4,8 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-// Tabel ini sebenarnya dikelola guru (FR-GR-03). Dibuat minimal di sini
-// supaya sisi siswa bisa diuji. Lewati kalau sudah ada.
 return new class extends Migration
 {
     public function up(): void

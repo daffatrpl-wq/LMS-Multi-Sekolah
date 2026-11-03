@@ -1,8 +1,8 @@
 <?php
+
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\School;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,95 +11,126 @@ use Illuminate\Support\Str;
 
 class TenantController extends Controller
 {
-    // READ: Menampilkan daftar tenant dan statistik global (FR-SA-03)
-    public function index()
+    public function index(Request $request)
     {
- $tenants = School::withCount('users')->latest()->get();
-    
-    // Menghitung statistik global untuk dashboard (FR-SA-03)
-    $globalStats = [
-        'total_tenants' => School::count(),
-        'active_tenants' => School::where('status', 'active')->count(),
-    ];
+        $q = trim((string) $request->query('q', ''));
 
-    return view('dashboard', compact('tenants', 'globalStats'));
+        $schools = DB::table('schools')
+            ->select('schools.*')
+            // jumlah semua pengguna di sekolah tersebut
+            ->selectSub(
+                DB::table('users')->selectRaw('count(*)')->whereColumn('users.school_id', 'schools.id'),
+                'users_count'
+            )
+            // nama admin sekolah (admin pertama yang terdaftar)
+            ->selectSub(
+                DB::table('users')->select('name')
+                    ->whereColumn('users.school_id', 'schools.id')
+                    ->where('role', 'school_admin')
+                    ->orderBy('id')->limit(1),
+                'admin_name'
+            )
+            ->when($q !== '', fn ($b) => $b->where('schools.name', 'like', '%'.$q.'%'))
+            ->orderByDesc('schools.id')
+            ->paginate(5)
+            ->withQueryString();
+
+        return view('SuperAdmin.tenants.index', compact('schools', 'q'));
     }
 
-    // CREATE FORM: Menampilkan form tambah tenant
+    // Tangguhkan / aktifkan sekolah
+    public function toggleStatus(int $tenant)
+    {
+        $school = DB::table('schools')->where('id', $tenant)->first();
+        abort_if(! $school, 404);
+
+        $baru = $school->status === 'active' ? 'suspended' : 'active';
+
+        DB::table('schools')->where('id', $tenant)->update(['status' => $baru, 'updated_at' => now()]);
+
+        return back()->with('status', 'Status '.$school->name.' diubah menjadi '.($baru === 'active' ? 'Aktif' : 'Ditangguhkan').'.');
+    }
+
+    // Sementara: halaman detail dan edit belum dibuat
+    public function show(string $tenant)
+    {
+        return redirect()->route('super-admin.tenants.index')->with('status', 'Halaman detail sekolah belum tersedia.');
+    }
+
+    public function edit(string $tenant)
+    {
+        return redirect()->route('super-admin.tenants.index')->with('status', 'Halaman edit sekolah belum tersedia.');
+    }
+
     public function create()
     {
-        return view('create_tenant');
+        return view('SuperAdmin.tenants.create');
     }
 
-    // STORE: Menyimpan tenant baru dan akun admin sekolah (FR-SA-01)
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'school_name'   => 'required|string|max:255|unique:schools,name',
-            'address'       => 'required|string',
-            'contact_email' => 'required|email|unique:schools,contact_email',
-            'admin_name'    => 'required|string|max:255',
-            'admin_email'   => 'required|email|unique:users,email',
-            'max_users'     => 'required|integer|min:10',
-            'max_classes'   => 'required|integer|min:1',
+        $data = $request->validate([
+            'name'        => ['required', 'string', 'max:255', 'unique:schools,name'],
+            'address'     => ['required', 'string', 'max:255'],
+            'email'       => ['required', 'email', 'max:255', 'unique:schools,contact_email'],
+            'phone'       => ['required', 'regex:/^[0-9+\-\s]{8,20}$/'],
+            'admin_name'  => ['required', 'string', 'max:255'],
+            'admin_email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'max_users'   => ['required', 'integer', 'min:1', 'max:100000'],
+            'max_classes' => ['required', 'integer', 'min:1', 'max:10000'],
+        ], [
+            'name.required'        => 'Nama sekolah wajib diisi.',
+            'name.unique'          => 'Nama sekolah sudah terdaftar.',
+            'address.required'     => 'Alamat wajib diisi.',
+            'email.required'       => 'Email sekolah wajib diisi.',
+            'email.email'          => 'Format email sekolah tidak valid.',
+            'email.unique'         => 'Email sekolah sudah terdaftar.',
+            'phone.required'       => 'No. telepon wajib diisi.',
+            'phone.regex'          => 'No. telepon tidak valid (8–20 digit, boleh diawali +).',
+            'admin_name.required'  => 'Nama admin wajib diisi.',
+            'admin_email.required' => 'Email admin wajib diisi.',
+            'admin_email.email'    => 'Format email admin tidak valid.',
+            'admin_email.unique'   => 'Email admin sudah dipakai akun lain.',
+            'max_users.required'   => 'Maks. pengguna wajib diisi.',
+            'max_users.min'        => 'Maks. pengguna minimal 1.',
+            'max_classes.required' => 'Maks. kelas wajib diisi.',
+            'max_classes.min'      => 'Maks. kelas minimal 1.',
         ]);
 
-        DB::transaction(function () use ($validated) {
-            $school = School::create([
-                'name'          => $validated['school_name'],
-                'address'       => $validated['address'],
-                'contact_email' => $validated['contact_email'],
-                'status'        => 'active',
-                'max_users'     => $validated['max_users'],
-                'max_classes'   => $validated['max_classes'],
+        $passwordSementara = Str::random(12);
+
+        // Sekolah dan akun admin dibuat bersamaan: gagal satu, batal semua.
+        DB::transaction(function () use ($data, $passwordSementara) {
+            $schoolId = DB::table('schools')->insertGetId([
+                'name'        => $data['name'],
+                'address'     => $data['address'],
+                'contact_email' => $data['email'],
+                'phone'       => $data['phone'],
+                'status'      => 'active',
+                'max_users'   => $data['max_users'],
+                'max_classes' => $data['max_classes'],
+                'created_at'  => now(),
+                'updated_at'  => now(),
             ]);
 
-            User::create([
-                'school_id' => $school->id,
-                'name'      => $validated['admin_name'],
-                'email'     => $validated['admin_email'],
-                'password'  => Hash::make('password123'), // Default password sementara
-                'role'      => 'school_admin',
-                'is_active' => true,
+            // forceCreate: role, school_id, is_active tidak ada di $fillable (sengaja)
+            User::forceCreate([
+                'name'              => $data['admin_name'],
+                'email'             => $data['admin_email'],
+                'password'          => Hash::make($passwordSementara),
+                'role'              => 'school_admin',
+                'school_id'         => $schoolId,
+                'is_active'         => true,
+                'email_verified_at' => now(),
             ]);
         });
 
-        return redirect()->route('super-admin.tenants.index')
-                         ->with('success', 'Tenant sekolah berhasil ditambahkan.');
-    }
-
-    // EDIT FORM: Form ubah data & kuota tenant (FR-SA-04)
-    public function edit(School $tenant)
-    {
-        return view('super_admin.tenants.edit', compact('tenant'));
-    }
-
-    // UPDATE: Memperbarui data tenant & status (FR-SA-02 & FR-SA-04)
-    public function update(Request $request, School $tenant)
-    {
-        $validated = $request->validate([
-            'name'        => 'required|string|max:255|unique:schools,name,' . $tenant->id,
-            'address'     => 'required|string',
-            'status'      => 'required|in:active,suspended,inactive',
-            'max_users'   => 'required|integer|min:1',
-            'max_classes' => 'required|integer|min:1',
-        ]);
-
-        $tenant->update($validated);
-
-        return redirect()->route('super-admin.tenants.index')
-                         ->with('success', 'Data tenant berhasil diperbarui.');
-    }
-
-    // DELETE: Menghapus tenant beserta data terkait di dalamnya
-    public function destroy(School $tenant)
-    {
-        DB::transaction(function () use ($tenant) {
-            User::where('school_id', $tenant->id)->delete();
-            $tenant->delete();
-        });
-
-        return redirect()->route('super-admin.tenants.index')
-                         ->with('success', 'Tenant berhasil dihapus.');
+        return redirect()
+            ->route('super-admin.tenants.create')
+            ->with('tenant_created', [
+                'sekolah' => $data['name'],
+                'email'   => $data['admin_email'],
+                'password'=> $passwordSementara,
+            ]);
     }
 }

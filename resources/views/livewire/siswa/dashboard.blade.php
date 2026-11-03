@@ -1,105 +1,77 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard Siswa') }}
-        </h2>
-    </x-slot>
+@php
+    $nama = request()->user()?->name ?? 'Siswa';
+    $hari = now()->locale('id')->translatedFormat('l, j F Y');
+    $ikon = ['blue' => 'i-monitor', 'green' => 'i-folder', 'orange' => 'i-chart', 'purple' => 'i-book'];
+    $nada = ['blue', 'green', 'orange', 'purple'];
+@endphp
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            
-            <!-- Banner Sambutan -->
-            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 overflow-hidden shadow-sm sm:rounded-lg p-6 text-white flex justify-between items-center">
-                <div>
-                    <h3 class="text-2xl font-bold">Selamat Datang, {{ Auth::user()->name }}! 👋</h3>
-                    <p class="mt-1 text-blue-100">Tetap semangat belajar dan pastikan semua tugasmu dikumpulkan tepat waktu.</p>
+<x-siswa-layout title="Dashboard Siswa"
+                :subtitle="'Selamat datang kembali, '.$nama.'!'"
+                tagline="Semangat belajar dan raih prestasimu! 🚀">
+
+    <style>
+        .jd.k4 .r{grid-template-columns:1.6fr 1.2fr 1.2fr 56px}
+        .jd .go{color:#2f56c8;font-weight:600;text-decoration:none;text-align:right}
+        .kosong{text-align:center;padding:26px 10px;color:var(--muted);font-size:12.5px}
+        .kosong a{display:inline-block;margin-top:12px;background:#2f6fe4;color:#fff;font-weight:600;font-size:12px;padding:9px 18px;border-radius:9px;text-decoration:none}
+    </style>
+
+    <section class="cards c4">
+        @foreach ($stats as $s)
+            <article class="card stat t-{{ $s['tone'] }}">
+                <div class="row">
+                    <span class="ico {{ $s['tone'] }}"><svg class="i"><use href="#{{ $s['icon'] }}"/></svg></span>
+                    <div><div class="lb">{{ $s['label'] }}</div><div class="val">{{ $s['value'] }}</div></div>
                 </div>
-                <div class="hidden md:block">
-                    <!-- Tombol Gabung Kelas / Aksi Cepat -->
-                    <a href="#" class="bg-white text-indigo-600 font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-50 transition">
-                        + Gabung Kelas Baru
-                    </a>
+                <div class="delta">{{ $s['delta'] }}</div>
+            </article>
+        @endforeach
+    </section>
+
+    <section class="mid m32">
+        <article class="card panel">
+            <div class="hd"><h3>Kelas Saya</h3><a href="{{ route('siswa.kelas-saya') }}" class="link">Lihat Semua ›</a></div>
+            <p class="sub-date">{{ $hari }}</p>
+
+            @if ($kelas->isEmpty())
+                <div class="kosong">
+                    Kamu belum mengikuti kelas apa pun.<br>
+                    <a href="{{ route('siswa.jelajahi') }}">Jelajahi Kelas</a>
                 </div>
-            </div>
-
-            <!-- Statistik Ringkas (Grid 3 Kolom) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Card 1: Kelas Diikuti -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 border-l-4 border-blue-500">
-                    <div class="text-gray-500 text-sm font-medium">Kelas Aktif</div>
-                    <div class="text-3xl font-bold text-gray-800 mt-2">4</div>
-                    <div class="text-xs text-gray-400 mt-1">Mata pelajaran semester ini</div>
+            @else
+                <div class="jd k4">
+                    @foreach ($kelas->take(6) as $k)
+                        <div class="r">
+                            <span class="mp"><span class="mpi {{ $nada[$loop->index % 4] }}"><svg class="i"><use href="#{{ $ikon[$nada[$loop->index % 4]] }}"/></svg></span>{{ $k->nama }}</span>
+                            <span class="kl">{{ $k->mata_pelajaran }}</span>
+                            <span class="rg">{{ $k->guru }}</span>
+                            <a href="{{ route('siswa.kelas-saya') }}" class="go">Buka</a>
+                        </div>
+                    @endforeach
                 </div>
+            @endif
 
-                <!-- Card 2: Tugas Pending -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 border-l-4 border-yellow-500">
-                    <div class="text-gray-500 text-sm font-medium">Tugas Belum Dikerjakan</div>
-                    <div class="text-3xl font-bold text-gray-800 mt-2">2</div>
-                    <div class="text-xs text-red-500 mt-1">Segera kumpulkan sebelum deadline</div>
-                </div>
+            <p class="quote"><svg class="i" style="width:14px;height:14px"><use href="#i-circlecheck"/></svg>"Ilmu hari ini, kesuksesan esok hari."</p>
+        </article>
 
-                <!-- Card 3: Kehadiran -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 border-l-4 border-green-500">
-                    <div class="text-gray-500 text-sm font-medium">Kehadiran (Presensi)</div>
-                    <div class="text-3xl font-bold text-gray-800 mt-2">95%</div>
-                    <div class="text-xs text-green-600 mt-1">Kehadiran sangat baik</div>
-                </div>
-            </div>
-
-            <!-- Konten Utama: Daftar Kelas & Tugas Mendatang -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                <!-- Kolom Kiri: Daftar Kelas yang Diikuti (2 Span) -->
-                <div class="lg:col-span-2 bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-lg font-bold text-gray-800">Kelas Saya</h4>
-                        <a href="#" class="text-sm text-indigo-600 hover:underline">Lihat Semua</a>
-                    </div>
-
-                    <div class="space-y-4">
-                        <!-- Item Kelas 1 -->
-                        <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition">
+        <article class="card panel">
+            <div class="hd"><h3><svg class="i"><use href="#i-task"/></svg>Tenggat Tugas</h3><a href="{{ route('siswa.tugas') }}" class="link">Lihat Semua</a></div>
+            @if ($tenggat->isEmpty())
+                <div class="kosong">Tidak ada tugas yang menunggu.</div>
+            @else
+                <ul class="pg">
+                    @foreach ($tenggat as $t)
+                        <li>
+                            <span class="dt" style="background:{{ $t['warna'] }}"></span>
                             <div>
-                                <h5 class="font-semibold text-gray-800">Matematika Lanjut</h5>
-                                <p class="text-sm text-gray-500">Pengampu: Budi Santoso, S.Pd.</p>
+                                <b><a href="{{ $t['url'] }}" style="color:inherit;text-decoration:none">{{ $t['judul'] }}</a></b>
+                                <small>{{ $t['mapel'] }} · {{ $t['waktu'] }}</small>
                             </div>
-                            <a href="#" class="px-4 py-2 bg-indigo-50 text-indigo-600 text-sm font-medium rounded-md hover:bg-indigo-100">Buka Kelas</a>
-                        </div>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </article>
+    </section>
 
-                        <!-- Item Kelas 2 -->
-                        <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition">
-                            <div>
-                                <h5 class="font-semibold text-gray-800">Pemrograman Web Dasar</h5>
-                                <p class="text-sm text-gray-500">Pengampu: Siti Aminah, M.Kom.</p>
-                            </div>
-                            <a href="#" class="px-4 py-2 bg-indigo-50 text-indigo-600 text-sm font-medium rounded-md hover:bg-indigo-100">Buka Kelas</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Kolom Kanan: Tugas Mendatang (1 Span) -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <h4 class="text-lg font-bold text-gray-800 mb-4">Tenggat Tugas</h4>
-
-                    <div class="space-y-4">
-                        <!-- Tugas 1 -->
-                        <div class="p-3 border-l-4 border-red-500 bg-red-50 rounded-r-lg">
-                            <span class="text-xs font-semibold text-red-600">Hari ini, 23:59</span>
-                            <h5 class="font-medium text-gray-800 text-sm mt-1">Latihan Soal Turunan Fungsi</h5>
-                            <p class="text-xs text-gray-500 mt-1">Matematika Lanjut</p>
-                        </div>
-
-                        <!-- Tugas 2 -->
-                        <div class="p-3 border-l-4 border-yellow-500 bg-yellow-50 rounded-r-lg">
-                            <span class="text-xs font-semibold text-yellow-600">Besok, 12:00</span>
-                            <h5 class="font-medium text-gray-800 text-sm mt-1">Membuat Layout CRUD Laravel</h5>
-                            <p class="text-xs text-gray-500 mt-1">Pemrograman Web Dasar</p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-    </div>
-</x-app-layout>
+</x-siswa-layout>

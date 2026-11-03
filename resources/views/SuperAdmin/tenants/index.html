@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Sekolah - LMS Multi Tenant</title>
+    <!-- Font Awesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
+            --sidebar-active: #2563eb;
+            --bg-color: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --badge-green-bg: #dcfce7;
+            --badge-green-text: #166534;
+            --badge-orange-bg: #ffedd5;
+            --badge-orange-text: #9a3412;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: var(--bg-color);
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .brand-text h1 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .brand-text p {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 20px 12px;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            margin-bottom: 6px;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #cbd5e1;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .menu a:hover {
+            background-color: var(--sidebar-hover);
+            color: white;
+        }
+
+        .menu a.active {
+            background-color: var(--sidebar-active);
+            color: white;
+            font-weight: 500;
+        }
+
+        .menu-bottom {
+            padding: 20px 12px;
+            border-top: 1px solid #1e293b;
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* Topbar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            background-color: var(--bg-color);
+        }
+
+        .page-title h2 {
+            font-size: 24px;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .page-title p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .user-profile i {
+            font-size: 20px;
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 0 32px 32px 32px;
+        }
+
+        /* Toolbar (Search & Button) */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 16px;
+        }
+
+        .search-box {
+            position: relative;
+            flex-grow: 1;
+            max-width: 400px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* Table Container */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 16px;
+            font-size: 14px;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-aktif {
+            background-color: var(--badge-green-bg);
+            color: var(--badge-green-text);
+        }
+
+        .badge-ditangguhkan {
+            background-color: var(--badge-orange-bg);
+            color: var(--badge-orange-text);
+        }
+
+        /* Buttons in Table */
+        .btn-detail {
+            background-color: white;
+            color: var(--primary-blue);
+            border: 1px solid var(--primary-blue);
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-detail:hover {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
+        .action-cell {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-more {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 16px;
+        }
+
+        /* Pagination Footer */
+        .table-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .pagination {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .page-btn.active {
+            background-color: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        .page-info {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-logo">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div class="brand-text">
+                <h1> Sistem Informasi</h1>
+                <p>LMS Multi Tenant</p>
+            </div>
+        </div>
+
+        <ul class="menu">
+            <li><a href="#"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+            <li><a href="#" class="active"><i class="fa-solid fa-school"></i> Manajemen Sekolah</a></li>
+            <li><a href="#"><i class="fa-solid fa-users"></i> Pengguna</a></li>
+            <li><a href="#"><i class="fa-solid fa-desktop"></i> Monitoring Sistem</a></li>
+            <li><a href="#"><i class="fa-solid fa-box"></i> Manajemen Kuota</a></li>
+            <li><a href="#"><i class="fa-solid fa-file-lines"></i> Audit Log</a></li>
+            <li><a href="#"><i class="fa-solid fa-user"></i> Profil</a></li>
+        </ul>
+
+        <div class="menu-bottom">
+            <ul class="menu" style="padding: 0;">
+                <li><a href="#"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="page-title">
+                <h2>Manajemen Sekolah</h2>
+                <p>Kelola data sekolah (tenant) yang terdaftar di sistem.</p>
+            </div>
+            <div class="user-profile">
+                <i class="fa-solid fa-circle-user"></i>
+                <span>Super Admin <i class="fa-solid fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i></span>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="content-area">
+            
+            <!-- Search & Add Button -->
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Cari nama sekolah...">
+                </div>
+                <button class="btn-primary">
+                    <i class="fa-solid fa-plus"></i> Tambah Sekolah
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Sekolah</th>
+                            <th>Admin Sekolah</th>
+                            <th>Pengguna</th>
+                            <th>Status</th>
+                            <th>Kuota</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td style="font-weight: 500;">SMAN 1 Banyuwangi</td>
+                            <td>Budi Santoso</td>
+                            <td>450</td>
+                            <td><span class="badge badge-aktif">Aktif</span></td>
+                            <td>500</td>
+                            <td>
+                                <div class="action-cell">
+                                    <button class="btn-detail">Lihat</button>
+                                    <button class="btn-more"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td style="font-weight: 500;">SMAN 1 Banyuwangi</td>
+                            <td>Andi Pratama</td>
+                            <td>380</td>
+                            <td><span class="badge badge-aktif">Aktif</span></td>
+                            <td>500</td>
+                            <td>
+                                <div class="action-cell">
+                                    <button class="btn-detail">Lihat</button>
+                                    <button class="btn-more"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td style="font-weight: 500;">SMA 2 Genteng</td>
+                            <td>Rina Lestari</td>
+                            <td>250</td>
+                            <td><span class="badge badge-aktif">Aktif</span></td>
+                            <td>300</td>
+                            <td>
+                                <div class="action-cell">
+                                    <button class="btn-detail">Lihat</button>
+                                    <button class="btn-more"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td style="font-weight: 500;">SMAN 3 Banyuwangi</td>
+                            <td>Dedi Kurniawan</td>
+                            <td>120</td>
+                            <td><span class="badge badge-ditangguhkan">Ditangguhkan</span></td>
+                            <td>300</td>
+                            <td>
+                                <div class="action-cell">
+                                    <button class="btn-detail">Lihat</button>
+                                    <button class="btn-more"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td style="font-weight: 500;">SMK 1 Cluring</td>
+                            <td>Siti Nurhaliza</td>
+                            <td>310</td>
+                            <td><span class="badge badge-aktif">Aktif</span></td>
+                            <td>400</td>
+                            <td>
+                                <div class="action-cell">
+                                    <button class="btn-detail">Lihat</button>
+                                    <button class="btn-more"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div class="table-footer">
+                    <div class="pagination">
+                        <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="page-info">
+                        Menampilkan 1-5 dari 25 data
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

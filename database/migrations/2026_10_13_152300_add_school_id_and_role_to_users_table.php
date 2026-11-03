@@ -6,25 +6,57 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-     Schema::table('users', function (Blueprint $table) {
-        $table->foreignId('school_id')->nullable()->constrained('schools')->nullOnDelete();
-        $table->enum('role', ['super_admin', 'school_admin', 'teacher', 'student'])->default('student');
-        $table->boolean('is_active')->default(true);
-    });
+        if (!Schema::hasColumn('users', 'school_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->foreignId('school_id')
+                    ->nullable()
+                    ->constrained('schools')
+                    ->restrictOnDelete();
+            });
+        }
+
+        if (!Schema::hasColumn('users', 'role')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->enum('role', [
+                    'super_admin',
+                    'school_admin',
+                    'teacher',
+                    'student',
+                ])->default('student');
+            });
+        }
+
+        if (!Schema::hasColumn('users', 'is_active')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->boolean('is_active')->default(true);
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+        if (Schema::hasColumn('users', 'school_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('school_id');
+            });
+        }
+
+        $columns = [];
+
+        if (Schema::hasColumn('users', 'role')) {
+            $columns[] = 'role';
+        }
+
+        if (Schema::hasColumn('users', 'is_active')) {
+            $columns[] = 'is_active';
+        }
+
+        if (!empty($columns)) {
+            Schema::table('users', function (Blueprint $table) use ($columns) {
+                $table->dropColumn($columns);
+            });
+        }
     }
 };
