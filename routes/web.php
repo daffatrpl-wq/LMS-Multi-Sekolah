@@ -19,9 +19,9 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return match (request()->user()->role) {
         'super_admin' => view('SuperAdmin.dashboard'),
-        'admin_sekolah' => redirect()->route('AdminSekolah.dashboard'),
         'student' => redirect()->route('siswa.dashboard'),
-        // TODO: Tambahkan redirect school_admin dan teacher
+        'school_admin' => redirect()->route('admin.dashboard'),
+        // TODO: Tambahkan redirect teacher
         default => abort(403, 'Role tidak dikenali.'),
     };
 })->middleware(['auth', 'verified'])->name('dashboard');

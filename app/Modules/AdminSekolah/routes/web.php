@@ -2,16 +2,15 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Modules\AdminSekolah\Http\Livewire\Dashboard;
-use App\Modules\AdminSekolah\Http\Livewire\ManageUsers;
 
-Route::middleware(['auth', 'role:admin,school_admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', Dashboard::class)->name('dashboard');
-});
-
+// Dashboard Admin Sekolah (komponen Livewire, data dari database)
 Route::middleware(['auth', 'verified', 'role:school_admin'])
-    ->prefix('admin-sekolah')
-    ->name('admin-sekolah.')
+    ->prefix('admin')
+    ->name('admin.')
     ->group(function () {
-        Route::view('/dashboard', 'admin_sekolah.dashboard')
-            ->name('dashboard');
+        Route::get('/dashboard', Dashboard::class)->name('dashboard');
     });
+
+// Alamat lama diarahkan ke dashboard baru
+Route::redirect('/admin-sekolah/dashboard', '/admin/dashboard')
+    ->name('admin-sekolah.dashboard');
