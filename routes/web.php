@@ -19,6 +19,7 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return match (request()->user()->role) {
         'super_admin' => view('SuperAdmin.dashboard'),
+        'admin_sekolah' => redirect()->route('AdminSekolah.dashboard'),
         'student' => redirect()->route('siswa.dashboard'),
         // TODO: Tambahkan redirect school_admin dan teacher
         default => abort(403, 'Role tidak dikenali.'),
